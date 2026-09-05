@@ -22,7 +22,6 @@ from backend.agent.orchestrator import AgentOrchestrator
 from backend.batch.runner import run_batch_evaluation
 from backend.policy.engine import PolicyEngine
 from backend.llm.explainability import LLMExplainer
-from backend.llm.bedrock_extraction import BedrockDatabaseExtractor
 
 # Initialize database tables
 Base.metadata.create_all(bind=engine)
@@ -126,21 +125,6 @@ def get_policies():
         "MIN_ACTION_CONFIDENCE": policy_engine.min_action_confidence,
         "CUSTOMER_OPTOUT": "HARD_STOP"
     }
-
-@app.get("/llm/provider")
-def get_llm_provider():
-    return {
-        "provider": llm_explainer.provider,
-        "active_llm": llm_explainer.get_active_provider_name(),
-        "bedrock_model": llm_explainer.bedrock_client.model_id,
-        "is_bedrock_configured": llm_explainer.bedrock_client.is_configured
-    }
-
-@app.post("/chat/extract")
-def extract_database_with_bedrock(req: ChatRequest, db = Depends(get_db)):
-    extractor = BedrockDatabaseExtractor(db)
-    res = extractor.extract_database_insights(req.message)
-    return res
 
 @app.get("/payments")
 def list_payments(

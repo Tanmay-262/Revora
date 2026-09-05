@@ -3,63 +3,23 @@ import json
 from typing import Dict, Any, List
 import google.generativeai as genai
 
-from backend.llm.bedrock_client import BedrockLLMClient
-
 class LLMExplainer:
     """
-    Multi-provider LLM reasoning service supporting AWS Bedrock, Google Gemini, and deterministic fallbacks.
-    Dynamically routes queries based on LLM_PROVIDER setting and active credentials.
+    LLM reasoning service powered by Google Gemini API.
+    Provides natural language root-cause analysis, decision summaries, and merchant Q&A.
+    Includes deterministic structured fallbacks for 100% reliability offline or without API keys.
     """
     def __init__(self):
-        self.provider = os.getenv("LLM_PROVIDER", "bedrock").lower()
+        self.api_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY")
+        self.model_name = "gemini-1.5-flash"
+        self.has_api_key = bool(self.api_key and not self.api_key.startswith("your_"))
         
-        # Initialize AWS Bedrock Client
-        self.bedrock_client = BedrockLLMClient()
-        
-        # Initialize Google Gemini Client
-        self.gemini_key = os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY")
-        self.gemini_model = None
-        self.has_gemini = bool(self.gemini_key and not self.gemini_key.startswith("your_"))
-        
-        if self.has_gemini:
+        if self.has_api_key:
             try:
-                genai.configure(api_key=self.gemini_key)
-                self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                genai.configure(api_key=self.api_key)
+                self.gemini_model = genai.GenerativeModel(self.model_name)
             except Exception:
-                self.has_gemini = False
-
-    def get_active_provider_name(self) -> str:
-        """Returns the currently active provider name ('AWS Bedrock', 'Google Gemini', or 'Deterministic Fallback')."""
-        if self.provider == "bedrock" and self.bedrock_client.is_configured:
-            return f"AWS Bedrock ({self.bedrock_client.model_id})"
-        elif self.has_gemini:
-            return "Google Gemini (gemini-1.5-flash)"
-        elif self.bedrock_client.client is not None:
-            return f"AWS Bedrock Sandbox ({self.bedrock_client.model_id})"
-        return "Deterministic Safety Fallback"
-
-    def _generate_with_active_llm(self, prompt: str) -> str:
-        """Attempts generation with Bedrock first if provider==bedrock, then Gemini, then None."""
-        if self.provider == "bedrock":
-            bedrock_output = self.bedrock_client.generate_text(prompt)
-            if bedrock_output:
-                return bedrock_output
-                
-        if self.has_gemini and self.gemini_model:
-            try:
-                res = self.gemini_model.generate_content(prompt)
-                if res and res.text:
-                    return res.text.strip()
-            except Exception:
-                pass
-                
-        # Try Bedrock as fallback if not primary
-        if self.provider != "bedrock":
-            bedrock_output = self.bedrock_client.generate_text(prompt)
-            if bedrock_output:
-                return bedrock_output
-                
-        return None
+                self.has_api_key = False
 
     def explain_root_cause_and_risk(
         self,
@@ -68,7 +28,7 @@ class LLMExplainer:
         selected_intervention: Dict[str, Any],
         policy_result: Dict[str, Any]
     ) -> str:
-        """Generates natural language summary explaining payment failure and chosen intervention."""
+        """Generates natural language summary explaining why a payment failed and why the chosen intervention was selected."""
         amount = payment_data.get("amount", 0.0)
         cause_name = root_cause.get("cause", "UNKNOWN")
         evidence = root_cause.get("evidence", [])
@@ -86,9 +46,13 @@ class LLMExplainer:
         - Policy Decision: {policy_decision} ({policy_result.get('rationale')})
         """
         
-        llm_text = self._generate_with_active_llm(prompt)
-        if llm_text:
-            return llm_text
+        if self.has_api_key:
+            try:
+                response = self.gemini_model.generate_content(prompt)
+                if response and response.text:
+                    return response.text.strip()
+            except Exception:
+                pass
                 
         # Deterministic fallback summary
         return (
@@ -108,8 +72,7 @@ class LLMExplainer:
         pending = context_metrics.get("human_escalations", 0)
         
         prompt = f"""
-        You are Razorpay's AI Revenue Recovery Assistant. Answer the merchant's query concisely based ONLY on these true system facts:
-        - Active LLM Provider: {self.get_active_provider_name()}
+        You are Revora's AI Revenue Recovery Assistant. Answer the merchant's query concisely based ONLY on these true system facts:
         - Revenue at Risk: INR {at_risk:,.2f}
         - Recovered Revenue: INR {recovered:,.2f}
         - Overall Recovery Rate: {rate*100:.2f}%
@@ -119,9 +82,13 @@ class LLMExplainer:
         Merchant Query: "{query}"
         """
         
-        llm_text = self._generate_with_active_llm(prompt)
-        if llm_text:
-            return llm_text
+        if self.has_api_key:
+            try:
+                response = self.gemini_model.generate_content(prompt)
+                if response and response.text:
+                    return response.text.strip()
+            except Exception:
+                pass
                 
         # Deterministic Q&A Fallback
         q_lower = query.lower()
@@ -132,4 +99,4 @@ class LLMExplainer:
         elif "pending" in q_lower or "review" in q_lower or "approve" in q_lower:
             return f"There are currently {pending} transactions awaiting manual merchant review."
         else:
-            return f"System Summary ({self.get_active_provider_name()}): Revenue at risk is INR {at_risk:,.2f}, with INR {recovered:,.2f} successfully recovered ({rate*100:.1f}% recovery rate)."
+            return f"System Summary: Revenue at risk is INR {at_risk:,.2f}, with INR {recovered:,.2f} successfully recovered ({rate*100:.1f}% recovery rate)."

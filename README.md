@@ -17,7 +17,6 @@ Payment failures cause significant revenue leakage for online merchants. When pa
 - **Root-Cause Classification**: Hybrid deterministic rule + evidence engine mapping errors to 5 primary failure classes.
 - **Intervention Expected Value Engine**: Ranks recovery actions (`RETRY_LATER`, `SEND_PAYMENT_LINK`, `ALTERNATIVE_PAYMENT_METHOD`, `HUMAN_REVIEW`) by expected net financial value.
 - **Deterministic Policy & Guardrail Engine**: Enforces hard monetary thresholds, retry limits, opt-out compliance, and minimum confidence gates (`ALLOW`, `BLOCK`, `HUMAN_APPROVAL_REQUIRED`).
-- **AWS Bedrock Enterprise LLM Services**: Integrated via `boto3` for Anthropic Claude 3 Haiku / Claude 3.5 Sonnet / Amazon Titan models with dynamic multi-provider routing and natural-language database extraction.
 - **Razorpay Test Mode Integration**: Automated Payment Link generation and payment status verification with offline sandbox fallback.
 - **Immutable Audit Trail**: Logs every risk score, policy check, operator approval, and execution event.
 - **Merchant Operations Dashboard**: Next.js 14 console featuring Executive KPIs, Recovery Queue, Payment Detail Drawer, Human Approvals Queue, held-out model benchmarks, and an AI Merchant Assistant.
@@ -39,10 +38,10 @@ Payment failures cause significant revenue leakage for online merchants. When pa
               |                       |
               v                       v
         AGENT ORCHESTRATOR       REST ENDPOINTS
-              |                       |
-       +------+------+                v
-       |             |         AWS BEDROCK / GEMINI
-       v             v        DATABASE EXTRACTION
+              |
+       +------+------+
+       |             |
+       v             v
   ML SERVICES     BUSINESS DATA
        |             |
        +------+------+
@@ -70,17 +69,24 @@ BATCH EVALUATION & BENCHMARKS
 
 ---
 
-## 4. AWS Bedrock Enterprise & ML Components
-
-### AWS Bedrock Enterprise LLM Integration (`backend/llm/`)
-- **Bedrock SDK Client**: `backend/llm/bedrock_client.py` wrapper using `boto3.client('bedrock-runtime')` supporting Anthropic Claude models (`anthropic.claude-3-haiku-20240307-v1:0`) and Amazon Titan text models.
-- **Multi-Provider LLM Router**: `backend/llm/explainability.py` dynamically routes reasoning requests between AWS Bedrock, Google Gemini, and rule-based fallbacks.
-- **Bedrock Database Extraction**: `backend/llm/bedrock_extraction.py` parses natural language merchant queries into database extraction summaries across `payments`, `agent_decisions`, and `audit_logs` tables.
+## 4. AI & Machine Learning Components
 
 ### ML Recovery Model ($P(\text{recovery})$)
 - **Model**: Trained on 70% train / 15% val / 15% held-out test split.
 - **Selected Architecture**: RandomForest Classifier with feature scaling and one-hot categorical encoding.
 - **Input Features**: `amount`, `cart_value`, `payment_method`, `bank`, `attempt_number`, `previous_failures`, `customer_age_days`, `customer_success_rate`, `payment_success_rate`, `device_type`, `failure_code`, `failure_class`, `checkout_duration`, `is_subscription`, `customer_opted_out`, `bank_failure_rate`, `hour_of_day`, `day_of_week`.
+
+### Root-Cause Classifier
+Determines primary failure category with explicit evidence logs:
+1. `TEMPORARY_BANK_FAILURE` (Bank downtime / gateway timeout)
+2. `PAYMENT_METHOD_FAILURE` (Expired card / invalid PIN)
+3. `CUSTOMER_ABANDONMENT` (Checkout timeout / drop-off)
+4. `INSUFFICIENT_FUNDS` (Balance error)
+5. `UNKNOWN` (Unrecognized error code)
+
+### Intervention Expected Recovery Value Engine
+Estimates $P(\text{success} \mid \text{intervention})$ and ranks options based on net expected recovery:
+$$\text{Expected Recovery Value} = P(\text{success} \mid \text{intervention}) \times \text{amount} - \text{cost} - \text{friction}$$
 
 ---
 
@@ -182,16 +188,7 @@ DATABASE_URL=sqlite:///./sql_app.db
 RAZORPAY_KEY_ID=rzp_test_your_key_id
 RAZORPAY_KEY_SECRET=your_key_secret
 
-# LLM Provider Configuration (Options: bedrock | gemini | fallback)
-LLM_PROVIDER=bedrock
-
-# AWS Bedrock Enterprise Configuration
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
-
-# Google Gemini API Key
+# LLM API Key (Google Gemini API)
 LLM_API_KEY=your_gemini_api_key
 GEMINI_API_KEY=your_gemini_api_key
 
