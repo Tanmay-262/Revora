@@ -1,0 +1,67 @@
+{
+  "model_name": "RandomForest",
+  "feature_cols": [
+    "amount",
+    "cart_value",
+    "payment_method",
+    "bank",
+    "attempt_number",
+    "previous_failures",
+    "customer_age_days",
+    "customer_success_rate",
+    "payment_success_rate",
+    "device_type",
+    "failure_code",
+    "failure_class",
+    "checkout_duration",
+    "is_subscription",
+    "customer_opted_out",
+    "historical_recovery_rate",
+    "bank_failure_rate",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "num_features": [
+    "amount",
+    "cart_value",
+    "attempt_number",
+    "previous_failures",
+    "customer_age_days",
+    "customer_success_rate",
+    "payment_success_rate",
+    "checkout_duration",
+    "historical_recovery_rate",
+    "bank_failure_rate",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "cat_features": [
+    "payment_method",
+    "bank",
+    "device_type",
+    "failure_code",
+    "failure_class",
+    "is_subscription",
+    "customer_opted_out"
+  ],
+  "validation_results": {
+    "LogisticRegression": {
+      "val_auc": 0.741894698634833,
+      "val_f1": 0.8327239488117002,
+      "val_precision": 0.7733446519524618,
+      "val_recall": 0.901980198019802
+    },
+    "RandomForest": {
+      "val_auc": 0.7433405254985783,
+      "val_f1": 0.8321100917431192,
+      "val_precision": 0.7752136752136752,
+      "val_recall": 0.898019801980198
+    },
+    "XGBoost": {
+      "val_auc": 0.7432054203383678,
+      "val_f1": 0.8252788104089219,
+      "val_precision": 0.7775831873905429,
+      "val_recall": 0.8792079207920792
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "total_records": 10000,
+  "total_revenue_at_risk": 60013509.78,
+  "total_recovered_revenue": 37412567.580000006,
+  "overall_recovery_rate": 0.6727,
+  "failure_class_counts": {
+    "TEMPORARY_BANK_FAILURE": 3533,
+    "PAYMENT_METHOD_FAILURE": 2476,
+    "CUSTOMER_ABANDONMENT": 2016,
+    "INSUFFICIENT_FUNDS": 1485,
+    "UNKNOWN": 490
+  },
+  "intervention_counts": {
+    "RETRY_LATER": 4854,
+    "ALTERNATIVE_PAYMENT_METHOD": 2388,
+    "SEND_PAYMENT_LINK": 1945,
+    "HUMAN_REVIEW": 480,
+    "NO_ACTION": 333
+  },
+  "opted_out_count": 333
+}

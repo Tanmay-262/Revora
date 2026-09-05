@@ -1,0 +1,14 @@
+{
+  "status": "PASSED",
+  "total_records": 10000,
+  "checks": {
+    "record_count": "PASSED: 10000 records",
+    "missing_values": "PASSED: Zero null values",
+    "duplicate_ids": "PASSED: All payment IDs are unique",
+    "amounts": "PASSED: Amounts range from \u20b9199.01 to \u20b949993.65",
+    "payment_methods": "PASSED: All payment methods valid",
+    "failure_classes": "PASSED: All failure classes valid",
+    "opt_out_rule": "PASSED: Opt-out customers strictly have 0 recovery rate",
+    "class_imbalance": "PASSED: Ground-truth recovery rate is balanced at 67.27%"
+  }
+}

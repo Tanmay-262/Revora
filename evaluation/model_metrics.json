@@ -1,0 +1,15 @@
+{
+  "model_name": "RandomForest",
+  "test_sample_count": 1500,
+  "precision": 0.7843,
+  "recall": 0.9009,
+  "f1_score": 0.8386,
+  "roc_auc": 0.7772,
+  "pr_auc": 0.8398,
+  "confusion_matrix": {
+    "true_negatives": 241,
+    "false_positives": 250,
+    "false_negatives": 100,
+    "true_positives": 909
+  }
+}

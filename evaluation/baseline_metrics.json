@@ -1,0 +1,12 @@
+{
+  "strategy_name": "BASELINE_BLIND_RETRY_ONCE",
+  "total_failed_payments": 10000,
+  "total_revenue_at_risk": 60013509.78,
+  "total_recovered_revenue": 14638497.43,
+  "recovered_count": 2629,
+  "recovery_rate": 0.2439,
+  "total_interventions": 9667,
+  "successful_interventions": 2629,
+  "unnecessary_interventions": 7038,
+  "intervention_efficiency": 0.272
+}
