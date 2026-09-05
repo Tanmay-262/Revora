@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Filter, AlertTriangle, ArrowRight, ShieldAlert, CheckCircle2, History } from 'lucide-react';
+import { Search, Filter, AlertTriangle, ArrowRight, ShieldAlert, CheckCircle2, History, X } from 'lucide-react';
 
 interface PaymentQueueProps {
   payments: any[];
   onSelectPayment: (paymentId: string) => void;
   onQuickRecover: (paymentId: string) => void;
   onOpenAudit: (paymentId: string) => void;
+  onSearch: (term: string, failureClass: string, statusFilter: string) => void;
   isLoading: boolean;
 }
 
@@ -16,17 +17,49 @@ export const PaymentQueue: React.FC<PaymentQueueProps> = ({
   onSelectPayment,
   onQuickRecover,
   onOpenAudit,
+  onSearch,
   isLoading
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [failureFilter, setFailureFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    onSearch(term, failureFilter, statusFilter);
+  };
+
+  const handleFailureFilterChange = (fc: string) => {
+    setFailureFilter(fc);
+    onSearch(searchTerm, fc, statusFilter);
+  };
+
+  const handleStatusFilterChange = (st: string) => {
+    setStatusFilter(st);
+    onSearch(searchTerm, failureFilter, st);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFailureFilter('');
+    setStatusFilter('');
+    onSearch('', '', '');
+  };
 
   const filteredPayments = payments.filter((p) => {
-    const matchesSearch =
-      p.payment_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.customer_id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = failureFilter ? p.failure_class === failureFilter : true;
-    return matchesSearch && matchesFilter;
+    const pId = String(p.payment_id || '').toLowerCase();
+    const cId = String(p.customer_id || '').toLowerCase();
+    const sTerm = searchTerm.toLowerCase().trim();
+
+    const matchesSearch = !sTerm || pId.includes(sTerm) || cId.includes(sTerm);
+    const matchesFailure = !failureFilter || p.failure_class === failureFilter;
+    const matchesStatus = !statusFilter || (
+      statusFilter === 'RECOVERED' ? (p.recovered || p.status === 'RECOVERED') :
+      statusFilter === 'PENDING_APPROVAL' ? (p.status === 'PENDING_APPROVAL') :
+      statusFilter === 'FAILED' ? (!p.recovered && p.status !== 'PENDING_APPROVAL') : true
+    );
+
+    return matchesSearch && matchesFailure && matchesStatus;
   });
 
   const getCauseBadge = (cause: string) => {
@@ -69,36 +102,65 @@ export const PaymentQueue: React.FC<PaymentQueueProps> = ({
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
       
-      {/* Controls Bar */}
+      {/* Dynamic Search & Filter Controls Bar */}
       <div className="p-4 border-b border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 bg-slate-900/60">
         
-        {/* Search */}
+        {/* Real-time Search Input */}
         <div className="relative w-full md:w-80">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search payment ID or customer ID..."
+            placeholder="Search payment ID or customer..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-8 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
           />
+          {searchTerm && (
+            <button
+              onClick={() => handleSearchChange('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* Filter dropdown */}
-        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+        {/* Filter Dropdowns */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
           <Filter className="w-3.5 h-3.5 text-slate-400" />
+          
           <select
             value={failureFilter}
-            onChange={(e) => setFailureFilter(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500"
+            onChange={(e) => handleFailureFilterChange(e.target.value)}
+            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500"
           >
-            <option value="">All Failure Classes</option>
+            <option value="">All Failure Causes</option>
             <option value="TEMPORARY_BANK_FAILURE">Temporary Bank Failure</option>
             <option value="PAYMENT_METHOD_FAILURE">Payment Method Failure</option>
             <option value="CUSTOMER_ABANDONMENT">Customer Abandonment</option>
             <option value="INSUFFICIENT_FUNDS">Insufficient Funds</option>
             <option value="UNKNOWN">Unknown</option>
           </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => handleStatusFilterChange(e.target.value)}
+            className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-sky-500"
+          >
+            <option value="">All Statuses</option>
+            <option value="FAILED">At Risk</option>
+            <option value="PENDING_APPROVAL">Needs Approval</option>
+            <option value="RECOVERED">Recovered</option>
+          </select>
+
+          {(searchTerm || failureFilter || statusFilter) && (
+            <button
+              onClick={clearFilters}
+              className="px-2 py-1 text-[11px] font-semibold text-slate-400 hover:text-slate-200 bg-slate-800 rounded transition-colors"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
 
       </div>
@@ -120,13 +182,16 @@ export const PaymentQueue: React.FC<PaymentQueueProps> = ({
             {isLoading ? (
               <tr>
                 <td colSpan={6} className="text-center py-10 text-slate-500">
-                  Loading recovery transactions...
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                    Fetching payment records...
+                  </div>
                 </td>
               </tr>
             ) : filteredPayments.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-10 text-slate-500">
-                  No payment records matching search query.
+                  No payment records matching active search filters.
                 </td>
               </tr>
             ) : (
@@ -141,7 +206,7 @@ export const PaymentQueue: React.FC<PaymentQueueProps> = ({
 
                   {/* Amount */}
                   <td className="px-5 py-3 font-bold text-slate-100">
-                    ₹{p.amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                    ₹{Number(p.amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                   </td>
 
                   {/* Failure Class */}
