@@ -49,9 +49,20 @@ export const PaymentQueue: React.FC<PaymentQueueProps> = ({
   const filteredPayments = payments.filter((p) => {
     const pId = String(p.payment_id || '').toLowerCase();
     const cId = String(p.customer_id || '').toLowerCase();
+    const bank = String(p.bank || '').toLowerCase();
+    const method = String(p.payment_method || '').toLowerCase();
+    const fClass = String(p.failure_class || '').toLowerCase();
+    const fCode = String(p.failure_code || '').toLowerCase();
     const sTerm = searchTerm.toLowerCase().trim();
 
-    const matchesSearch = !sTerm || pId.includes(sTerm) || cId.includes(sTerm);
+    const matchesSearch = !sTerm || 
+      pId.includes(sTerm) || 
+      cId.includes(sTerm) || 
+      bank.includes(sTerm) || 
+      method.includes(sTerm) || 
+      fClass.includes(sTerm) || 
+      fCode.includes(sTerm);
+
     const matchesFailure = !failureFilter || p.failure_class === failureFilter;
     const matchesStatus = !statusFilter || (
       statusFilter === 'RECOVERED' ? (p.recovered || p.status === 'RECOVERED') :

@@ -52,24 +52,27 @@ def seed_database_from_csv(csv_path="ml/data/payments_dataset.csv"):
     db = SessionLocal()
     try:
         if db.query(models.Payment).count() == 0:
-            print("[INFO] Seeding database from payments_dataset.csv...")
-            df = pd.read_csv(csv_path).head(1000)  # Seed first 1,000 for database query performance
+            print("[INFO] Bulk seeding database from payments_dataset.csv...")
+            df = pd.read_csv(csv_path).head(1000)  # Seed 1,000 records for fast high-performance queries
+            
+            existing_cust_ids = set(c[0] for c in db.query(models.Customer.customer_id).all())
+            customers_to_add = []
+            payments_to_add = []
+
             for _, row in df.iterrows():
-                # Add Customer
-                cust = db.query(models.Customer).filter_by(customer_id=row["customer_id"]).first()
-                if not cust:
-                    cust = models.Customer(
-                        customer_id=row["customer_id"],
+                cid = str(row["customer_id"])
+                if cid not in existing_cust_ids:
+                    existing_cust_ids.add(cid)
+                    customers_to_add.append(models.Customer(
+                        customer_id=cid,
                         customer_age_days=int(row["customer_age_days"]),
                         customer_success_rate=float(row["customer_success_rate"]),
                         customer_opted_out=bool(row["customer_opted_out"])
-                    )
-                    db.add(cust)
+                    ))
                     
-                # Add Payment
-                pay = models.Payment(
-                    payment_id=row["payment_id"],
-                    customer_id=row["customer_id"],
+                payments_to_add.append(models.Payment(
+                    payment_id=str(row["payment_id"]),
+                    customer_id=cid,
                     amount=float(row["amount"]),
                     currency=str(row["currency"]),
                     payment_method=str(row["payment_method"]),
@@ -84,10 +87,14 @@ def seed_database_from_csv(csv_path="ml/data/payments_dataset.csv"):
                     bank_failure_rate=float(row["bank_failure_rate"]),
                     status="FAILED",
                     recovered=False
-                )
-                db.add(pay)
+                ))
+
+            if customers_to_add:
+                db.bulk_save_objects(customers_to_add)
+            if payments_to_add:
+                db.bulk_save_objects(payments_to_add)
             db.commit()
-            print("[SUCCESS] Database seeded with initial transactions.")
+            print(f"[SUCCESS] Database successfully seeded with {len(payments_to_add)} records.")
     except Exception as e:
         db.rollback()
         print(f"[WARNING] Database seed skipped: {e}")
@@ -136,12 +143,31 @@ def list_payments(
     db = Depends(get_db)
 ):
     query = db.query(models.Payment)
+    
     if status:
-        query = query.filter(models.Payment.status == status.upper())
+        st = status.upper().strip()
+        if st == "RECOVERED":
+            query = query.filter((models.Payment.recovered == True) | (models.Payment.status == "RECOVERED"))
+        elif st == "PENDING_APPROVAL":
+            query = query.filter(models.Payment.status == "PENDING_APPROVAL")
+        elif st == "FAILED":
+            query = query.filter((models.Payment.recovered == False) & (models.Payment.status != "PENDING_APPROVAL"))
+        else:
+            query = query.filter(models.Payment.status == st)
+            
     if failure_class:
-        query = query.filter(models.Payment.failure_class == failure_class.upper())
+        query = query.filter(models.Payment.failure_class == failure_class.upper().strip())
+        
     if search:
-        query = query.filter(models.Payment.payment_id.ilike(f"%{search}%") | models.Payment.customer_id.ilike(f"%{search}%"))
+        s = f"%{search.strip()}%"
+        query = query.filter(
+            models.Payment.payment_id.ilike(s) |
+            models.Payment.customer_id.ilike(s) |
+            models.Payment.bank.ilike(s) |
+            models.Payment.payment_method.ilike(s) |
+            models.Payment.failure_code.ilike(s) |
+            models.Payment.failure_class.ilike(s)
+        )
         
     total = query.count()
     payments = query.order_by(models.Payment.timestamp.desc()).offset(offset).limit(limit).all()
