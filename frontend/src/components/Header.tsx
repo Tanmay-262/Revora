@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="text-lg font-bold text-slate-100 tracking-tight">
-                Razorpay <span className="text-sky-400 font-semibold">AI Revenue Recovery</span>
+                Revora <span className="text-sky-400 font-semibold">AI Revenue Recovery</span>
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <ShieldCheck className="w-3 h-3" />

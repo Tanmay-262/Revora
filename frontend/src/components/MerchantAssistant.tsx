@@ -13,7 +13,7 @@ export const MerchantAssistant: React.FC<MerchantAssistantProps> = ({ isOpen, on
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
     {
       sender: 'bot',
-      text: 'Hello! I am your Razorpay AI Revenue Recovery Assistant. Ask me about revenue at risk, root causes, recovery uplift, or high-value items requiring review.'
+      text: 'Hello! I am Revora, your AI Revenue Recovery Assistant. Ask me about revenue at risk, root causes, recovery uplift, or high-value items requiring review.'
     }
   ]);
   const [input, setInput] = useState('');

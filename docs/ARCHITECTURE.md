@@ -1,9 +1,9 @@
-# System Architecture - AI Revenue Recovery Agent
+# System Architecture - Revora (AI Revenue Recovery Agent)
 
 ## Track 03: AI Revenue Recovery (Razorpay AI Builder Buildathon)
 
 ### Overview
-The AI Revenue Recovery Agent is a production-inspired, autonomous revenue recovery platform designed to detect at-risk payments, diagnose failure root causes, rank recovery interventions by expected value, enforce deterministic guardrails, and safely execute recovery workflows.
+Revora is a production-inspired, autonomous AI revenue recovery platform designed to detect at-risk payments, diagnose failure root causes, rank recovery interventions by expected value, enforce deterministic guardrails, and safely execute recovery workflows.
 
 ```text
                     MERCHANT / USER

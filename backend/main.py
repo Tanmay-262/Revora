@@ -28,8 +28,8 @@ from backend.llm.bedrock_extraction import BedrockDatabaseExtractor
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Razorpay AI Revenue Recovery Engine API",
-    description="Backend services for Track 03: AI Revenue Recovery Agent",
+    title="Revora — AI Revenue Recovery Engine API",
+    description="Backend services for Track 03: Revora AI Revenue Recovery Agent",
     version="1.0.0"
 )
 
@@ -114,7 +114,7 @@ class ChatRequest(BaseModel):
 def health_check():
     return {
         "status": "healthy",
-        "service": "Razorpay AI Revenue Recovery Engine",
+        "service": "Revora — AI Revenue Recovery Engine",
         "timestamp": datetime.utcnow().isoformat()
     }
 

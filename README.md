@@ -1,4 +1,4 @@
-# AI Revenue Recovery Agent
+# Revora — AI Revenue Recovery Agent
 
 > **Track 03: AI Revenue Recovery — Razorpay AI Builder Buildathon**
 > *"Find revenue that's slipping away and win it back."*
@@ -11,7 +11,7 @@ Payment failures cause significant revenue leakage for online merchants. When pa
 ---
 
 ## 2. Solution
-The **AI Revenue Recovery Agent** is a production-inspired, autonomous revenue recovery platform built for Razorpay merchants. It combines:
+**Revora** is a production-inspired, autonomous AI revenue recovery platform built for Razorpay merchants. It combines:
 - **Synthetic Data Generation**: 10,000+ non-random, correlated transaction records.
 - **Machine Learning Models**: Predicts $P(\text{recovery})$ with Random Forest / XGBoost models.
 - **Root-Cause Classification**: Hybrid deterministic rule + evidence engine mapping errors to 5 primary failure classes.

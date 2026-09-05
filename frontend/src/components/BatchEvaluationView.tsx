@@ -132,7 +132,7 @@ export const BatchEvaluationView: React.FC<BatchEvaluationViewProps> = ({
           </div>
 
           <div className="bg-slate-950 p-4 rounded-lg border border-emerald-500/30">
-            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">AI Revenue Recovery Agent</span>
+            <span className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Revora AI Revenue Recovery Agent</span>
             <p className="text-[11px] text-slate-500 mt-0.5">ML Diagnosis + Expected Value + Policy Guardrails</p>
             <div className="text-xl font-bold text-emerald-400 mt-2">
               ₹{batchMetrics.agent_recovered_revenue?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
